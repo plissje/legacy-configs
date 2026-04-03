@@ -1,4 +1,4 @@
--- live_balancer.lua (v1.7 - The Cvar Method)
+-- live_balancer.lua (v1.8 - The Cvar Method)
 et.RegisterModname("Live Balancer API")
 
 function et_ConsoleCommand()
@@ -16,28 +16,33 @@ function et_ConsoleCommand()
                 if userinfo ~= "" then
                     local name = et.Info_ValueForKey(userinfo, "name")
                     local guid = et.Info_ValueForKey(userinfo, "cl_guid")
+                    if not guid or guid == "" then
+                        guid = et.Info_ValueForKey(userinfo, "guid")
+                    end
                     
                     if name and name ~= "" and guid and guid ~= "" then
-                        name = string.gsub(name, '"', '\\"')
+                        -- ESCAPING: Backslash MUST come first!
                         name = string.gsub(name, '\\', '\\\\')
+                        name = string.gsub(name, '"', '\\"')
                         table.insert(players, string.format('{"slot":%d,"name":"%s","guid":"%s","team":%d}', i, name, guid, team))
                     end
                 end
             end
         end
         
-        -- Store the result in a Cvar. Calling "api_live_players" directly from RCON
-        -- will also still print the markers just in case the console capture works.
+        -- Store the result in a Cvar.
         local json_payload = "[" .. table.concat(players, ",") .. "]"
         et.trap_Cvar_Set("etl_live_api", json_payload)
         
-        local final_output = "\nAPI_PLAYERS_START\n" .. json_payload .. "\nAPI_PLAYERS_END\n"
-        if et.trap_Print then et.trap_Print(final_output) end
+        -- Also print it to the console with clear markers for RCON capture
+        local output = "\nAPI_PLAYERS_START\n" .. json_payload .. "\nAPI_PLAYERS_END\n"
+        print(output)
+        if et.trap_Print then et.trap_Print(output) end
         
         return 1
     end
     return 0
 end
 
-print("[Live API] LOADED - version 1.7")
-et.trap_SendConsoleCommand(et.EXEC_APPEND, "say Live Balancer API v1.7 Loaded\n")
+print("[Live API] LOADED - version 1.8 (Fixed Escaping)")
+et.trap_SendConsoleCommand(et.EXEC_APPEND, "say Live Balancer API v1.8 Loaded\n")
