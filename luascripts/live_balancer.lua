@@ -1,4 +1,4 @@
--- live_balancer.lua (v1.6 - Final RCON fix)
+-- live_balancer.lua (v1.7 - The Cvar Method)
 et.RegisterModname("Live Balancer API")
 
 function et_ConsoleCommand()
@@ -26,21 +26,18 @@ function et_ConsoleCommand()
             end
         end
         
-        -- Add a non-empty character at the start to ensure engine captures the first line
+        -- Store the result in a Cvar. Calling "api_live_players" directly from RCON
+        -- will also still print the markers just in case the console capture works.
         local json_payload = "[" .. table.concat(players, ",") .. "]"
-        local final_output = " \nAPI_PLAYERS_START\n" .. json_payload .. "\nAPI_PLAYERS_END\n"
+        et.trap_Cvar_Set("etl_live_api", json_payload)
         
-        if et.trap_Print then
-            et.trap_Print(final_output)
-        elseif et.G_Printf then
-            et.G_Printf("%s", final_output)
-        else
-            print(final_output)
-        end
+        local final_output = "\nAPI_PLAYERS_START\n" .. json_payload .. "\nAPI_PLAYERS_END\n"
+        if et.trap_Print then et.trap_Print(final_output) end
+        
         return 1
     end
     return 0
 end
 
-print("[Live API] LOADED - version 1.6")
-et.trap_SendConsoleCommand(et.EXEC_APPEND, "say Live Balancer API v1.6 Loaded\n")
+print("[Live API] LOADED - version 1.7")
+et.trap_SendConsoleCommand(et.EXEC_APPEND, "say Live Balancer API v1.7 Loaded\n")
