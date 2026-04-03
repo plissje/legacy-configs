@@ -1,45 +1,36 @@
--- live_balancer.lua
--- Put this file in your fs_homepath/legacy/luascripts folder
--- and add it to lua_modules in your server config:
--- set lua_modules "luascripts/live_balancer.lua"
-
+-- live_balancer.lua (v1.3 - Final RCON Fix)
 et.RegisterModname("Live Balancer API")
 
-print("Live Balancer API: Initializing...")
+print("[Live API] LOADED - version 1.3")
 
 function et_ConsoleCommand()
     local cmd = et.trap_Argv(0)
-    -- Debug: print every command to see if we're hitting the hook
-    -- print("Command caught: " .. tostring(cmd))
-
     if string.lower(cmd) == "api_live_players" then
-        print("Live Balancer API: Command 'api_live_players' triggered")
-        local num_clients = tonumber(et.trap_Cvar_Get("sv_maxclients")) or 64
         local players = {}
-        
-        for i=0, num_clients-1 do
-            local team = et.gentity_get(i, "sess.sessionTeam")
-            -- team 1 = Axis, 2 = Allies, 3 = Spectator
-            if team and (team == 1 or team == 2 or team == 3) then
-                local userinfo = et.trap_GetUserinfo(i)
-                local name = et.Info_ValueForKey(userinfo, "name")
-                local guid = et.Info_ValueForKey(userinfo, "cl_guid")
+        -- ET: Legacy supports up to 64 slots
+        for i=0, 63 do
+            local cs = et.trap_GetConfigstring(64 + i) -- 64+i is the player info CS
+            if cs and cs ~= "" then
+                local name = et.Info_ValueForKey(cs, "n")
+                local guid = et.Info_ValueForKey(cs, "cl_guid")
+                local team = tonumber(et.Info_ValueForKey(cs, "t")) or 3
                 
-                if name and guid and guid ~= "" then
-                    -- Escape quotes in name
+                -- Only include players who actually have a name and GUID
+                if name and name ~= "" and guid and guid ~= "" then
+                    -- Escape quotes in name for JSON safety
                     name = string.gsub(name, '"', '\\"')
                     name = string.gsub(name, '\\', '\\\\')
-                    
                     table.insert(players, string.format('{"slot":%d,"name":"%s","guid":"%s","team":%d}', i, name, guid, team))
                 end
             end
         end
         
-        local json_payload = table.concat(players, ",\n")
-        local final_output = "\nAPI_PLAYERS_START\n[" .. json_payload .. "]\nAPI_PLAYERS_END\n"
+        local final_output = "\nAPI_PLAYERS_START\n[" .. table.concat(players, ",\n") .. "]\nAPI_PLAYERS_END\n"
         
-        -- Try to use engine-level Printf (caught by RCON)
-        if et.G_Printf then
+        -- et.trap_Print is the most reliable way to send text back to the RCON client
+        if et.trap_Print then
+            et.trap_Print(final_output)
+        elseif et.G_Printf then
             et.G_Printf("%s", final_output)
         else
             -- Fallback to standard Lua print
@@ -49,5 +40,3 @@ function et_ConsoleCommand()
     end
     return 0
 end
-
-print("Live Balancer API: Ready.")
