@@ -1,7 +1,5 @@
--- live_balancer.lua (v1.4 - Fixed Player Detection)
+-- live_balancer.lua (v1.5 - RCON Optimization)
 et.RegisterModname("Live Balancer API")
-
-print("[Live API] LOADED - version 1.4")
 
 function et_ConsoleCommand()
     local cmd = et.trap_Argv(0)
@@ -10,8 +8,7 @@ function et_ConsoleCommand()
         local maxclients = tonumber(et.trap_Cvar_Get("sv_maxclients")) or 64
         
         for i=0, maxclients-1 do
-            -- Get player team (1=Axis, 2=Allies, 3=Spec)
-            -- This is the most reliable way to check if a player is in a slot
+            -- Team 1=Axis, 2=Allies, 3=Spec
             local team = tonumber(et.gentity_get(i, "sess.sessionTeam"))
             
             if team and (team >= 1 and team <= 3) then
@@ -29,11 +26,12 @@ function et_ConsoleCommand()
             end
         end
         
-        local final_output = "\nAPI_PLAYERS_START\n[" .. table.concat(players, ",\n") .. "]\nAPI_PLAYERS_END\n"
+        -- Start with exactly one newline as the engine might prefix its own headers
+        local json_payload = "[" .. table.concat(players, ",") .. "]"
+        local final_output = "\nAPI_PLAYERS_START\n" .. json_payload .. "\nAPI_PLAYERS_END\n"
         
-        if et.trap_Print then
-            et.trap_Print(final_output)
-        elseif et.G_Printf then
+        -- et.G_Printf is the standard for console output during a command
+        if et.G_Printf then
             et.G_Printf("%s", final_output)
         else
             print(final_output)
@@ -42,3 +40,6 @@ function et_ConsoleCommand()
     end
     return 0
 end
+
+print("[Live API] LOADED - version 1.5")
+et.trap_SendConsoleCommand(et.EXEC_APPEND, "say Live Balancer API v1.5 Loaded\n")
