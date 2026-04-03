@@ -30,7 +30,7 @@ function et_ConsoleCommand()
         end
         
         -- Print a cleanly delimited JSON array back to the RCON console
-        et.G_Printf("API_PLAYERS_START\n[%s]\nAPI_PLAYERS_END\n", table.concat(players, ",\n"))
+        print("API_PLAYERS_START\n[" .. table.concat(players, ",\n") .. "]\nAPI_PLAYERS_END\n")
         return 1
     end
     return 0
