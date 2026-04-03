@@ -5,9 +5,15 @@
 
 et.RegisterModname("Live Balancer API")
 
+print("Live Balancer API: Initializing...")
+
 function et_ConsoleCommand()
     local cmd = et.trap_Argv(0)
+    -- Debug: print every command to see if we're hitting the hook
+    -- print("Command caught: " .. tostring(cmd))
+
     if string.lower(cmd) == "api_live_players" then
+        print("Live Balancer API: Command 'api_live_players' triggered")
         local num_clients = tonumber(et.trap_Cvar_Get("sv_maxclients")) or 64
         local players = {}
         
@@ -29,9 +35,14 @@ function et_ConsoleCommand()
             end
         end
         
-        -- Print a cleanly delimited JSON array back to the RCON console
-        print("API_PLAYERS_START\n[" .. table.concat(players, ",\n") .. "]\nAPI_PLAYERS_END\n")
+        local json_payload = table.concat(players, ",\n")
+        local final_output = "\nAPI_PLAYERS_START\n[" .. json_payload .. "]\nAPI_PLAYERS_END\n"
+        
+        -- Use standard print for RCON redirection
+        print(final_output)
         return 1
     end
     return 0
 end
+
+print("Live Balancer API: Ready.")
