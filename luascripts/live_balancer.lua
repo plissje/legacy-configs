@@ -38,8 +38,13 @@ function et_ConsoleCommand()
         local json_payload = table.concat(players, ",\n")
         local final_output = "\nAPI_PLAYERS_START\n[" .. json_payload .. "]\nAPI_PLAYERS_END\n"
         
-        -- Use standard print for RCON redirection
-        print(final_output)
+        -- Try to use engine-level Printf (caught by RCON)
+        if et.G_Printf then
+            et.G_Printf("%s", final_output)
+        else
+            -- Fallback to standard Lua print
+            print(final_output)
+        end
         return 1
     end
     return 0
