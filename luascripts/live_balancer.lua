@@ -1,14 +1,14 @@
--- live_balancer.lua (v3.0 - 10-Chunk Compact Method)
+-- live_balancer.lua (v3.1 - 10-Chunk Compact Method)
 et.RegisterModname("Live Balancer API")
 
 function sanitize_name(text)
     if not text then return "" end
-    local s = string.gsub(text, "%^%d", "") -- Strip colors
+    local s = string.gsub(text, "%^.", "") -- Strip ALL color codes (^1, ^s, etc.)
     s = string.gsub(s, "|", " ")            -- Strip delims
     s = string.gsub(s, ";", " ")            -- Strip delims
     s = string.gsub(s, '"', "'")            -- Replace double quotes with single
     s = string.gsub(s, ",", " ")            -- Strip commas
-    return s:strip() or s
+    return string.strip(s) or s
 end
 
 -- Polyfill for older Lua versions if needed
@@ -35,7 +35,10 @@ function et_ConsoleCommand()
             if team and (team >= 1 and team <= 3) then
                 local userinfo = et.trap_GetUserinfo(i)
                 if userinfo ~= "" then
-                    local name = et.Info_ValueForKey(userinfo, "name")
+                    local name = et.gentity_get(i, "pers.netname")
+                    if not name or name == "" or name == "default:" then
+                        name = et.Info_ValueForKey(userinfo, "name")
+                    end
                     local guid = et.Info_ValueForKey(userinfo, "cl_guid")
                     if not guid or guid == "" then
                         guid = et.Info_ValueForKey(userinfo, "guid")
@@ -69,11 +72,11 @@ function et_ConsoleCommand()
             end
         end
         
-        print("\nAPI_PLAYERS_SYNC_COMPLETE - v3.0 (10 Chunks)\n")
+        print("\nAPI_PLAYERS_SYNC_COMPLETE - v3.1 (10 Chunks)\n")
         return 1
     end
     return 0
 end
 
-print("[Live API] LOADED - version 3.0 (10-Chunk Compact)")
-et.trap_SendConsoleCommand(et.EXEC_APPEND, "say Live Balancer API v3.0 Loaded (10-Chunk)\n")
+print("[Live API] LOADED - version 3.1")
+et.trap_SendConsoleCommand(et.EXEC_APPEND, "say Live Balancer API v3.1\n")
